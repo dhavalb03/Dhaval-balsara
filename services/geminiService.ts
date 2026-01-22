@@ -2,7 +2,20 @@
 import { GoogleGenAI } from "@google/genai";
 import { PROJECTS } from "../constants";
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "" });
+// Lazy initialization to prevent blocking React mount when API key is missing
+let ai: GoogleGenAI | null = null;
+
+const getAIClient = () => {
+  if (!ai) {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      console.warn("VITE_GEMINI_API_KEY is not set");
+      return null;
+    }
+    ai = new GoogleGenAI({ apiKey });
+  }
+  return ai;
+};
 
 const systemInstruction = `
 You are a calm, expert AI systems consultant assisting visitors on Dhaval Balsara's portfolio.
@@ -22,8 +35,13 @@ Guidelines:
 
 export const getAIResponse = async (userMessage: string, history: { role: string, content: string }[]) => {
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+    const client = getAIClient();
+    if (!client) {
+      return "The AI assistant is currently unavailable. Please reach out to Dhaval directly via WhatsApp.";
+    }
+
+    const response = await client.models.generateContent({
+      model: "gemini-2.0-flash",
       contents: [
         ...history.map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.content }] })),
         { role: 'user', parts: [{ text: userMessage }] }
