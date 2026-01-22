@@ -2,7 +2,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { PROJECTS } from "../constants";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "" });
 
 const systemInstruction = `
 You are a calm, expert AI systems consultant assisting visitors on Dhaval Balsara's portfolio.
